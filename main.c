@@ -5,7 +5,6 @@
 #include<string.h>
 
 #define list_of_wordlists LoW
-//define buffer_size bs
 
 int bs;
 int number_of_wordlists = 0;
@@ -23,7 +22,7 @@ void print_lines(char **lines, int len);
 
 int main(int argc, char *argv[]){
 	LoW = load_all_wordlists(&number_of_wordlists,lenght_of_wordlists);	
-    bs = atoi(argv[1]);
+	bs = atoi(argv[1]);
 
 	for(int i = 2; i < argc; i++){
 		loop("",argv[i]);	
@@ -43,7 +42,7 @@ int loop_wordlist(int wordlist_id, char *base, char *cmd){
 			char *new, *new_base;
 			int bl = strlen(base) + 1, nl, nb, length = 0;
 			
-            new_base = (char *)malloc(bl * sizeof(char));
+            		new_base = (char *)malloc(bl * sizeof(char));
 			strcpy(new_base,"");
 
 			for(int j = 0;j < bs;j++){
@@ -51,7 +50,7 @@ int loop_wordlist(int wordlist_id, char *base, char *cmd){
 				nl = strlen(wl[bs*i+j]) + 1;
 				char *nnb = (char *)realloc(new_base,(nb + bl + nl)*sizeof(char));
 				
-                if(!nnb){
+                		if(!nnb){
 					fprintf(stderr,"Realloc failed\n");
 					exit(0);
 				}
@@ -80,7 +79,7 @@ int loop_wordlist(int wordlist_id, char *base, char *cmd){
 	
 		return 0;
 	}
-	for(int i = 1; i <= len;	i++){
+	for(int i = 1; i <= len; i++){
 		char *new_base, *wl = list_of_wordlists[wordlist_id][i];
 		int new_len = strlen(wl), base_len = strlen(base);
 
@@ -104,19 +103,19 @@ int loop(char *base, char *cmd){
 		if(cmd[i] == ']' && e == -1) e = i;
 	}
 
-    if(s == -1 || e == -1){
-        fprintf(stderr, "Incorrectly written command\n");
-        exit(1);
-    }
+    	if(s == -1 || e == -1){
+        	fprintf(stderr, "Incorrectly written command\n");
+        	exit(1);
+    	}
 
 	for(int i = s; i <= e; i++)
 		if(cmd[i] == ',')
 			commas[++c] = i;
 	commas[++c] = e;
 	
-    for(int i = 0; i < c; i++){
+    	for(int i = 0; i < c; i++){
 		wordlist_id = find_wordlist_id(crop_string(cmd,commas[i]+1,commas[i+1]));
-        loop_wordlist(wordlist_id, base, crop_string(cmd,e+1,strlen(cmd)));
+        	loop_wordlist(wordlist_id, base, crop_string(cmd,e+1,strlen(cmd)));
 	}	
 
 	return 0;
@@ -137,9 +136,9 @@ char **load_file(char *file_name, int *len, char *alias){
 	FILE *file = fopen(file_name, "r");
 	
 	if(!file){
-	    fprintf(stderr, "Failed to load file named: %s\n", file_name);
-        exit(1);
-    }
+	    	fprintf(stderr, "Failed to load file named: %s\n", file_name);
+        	exit(1);
+    	}
 	
 	char **lines = (char **)malloc(cl * sizeof(char *));
 	char buf[50];
@@ -158,9 +157,9 @@ char **load_file(char *file_name, int *len, char *alias){
 		if(i == cl * noc){
 			char **nl = (char **)realloc(lines, (++noc) * cl * sizeof(char *));
 			if(!nl){
-                fprintf(stderr, "Realloc failed");
-                exit(1);
-            }  
+                		fprintf(stderr, "Realloc failed");
+                		exit(1);
+            		}  
 			lines = nl;
 		}
 	}
@@ -198,7 +197,7 @@ char ***load_all_wordlists(int *len, int *low){
 	number_of_aliases = (number_of_aliases - 1) / 2;
 
 	list_of_wordlists = (char ***)malloc(number_of_aliases * sizeof(char**));
-    lenght_of_wordlists = (int*)malloc(number_of_aliases * sizeof(int));
+    	lenght_of_wordlists = (int*)malloc(number_of_aliases * sizeof(int));
 
 	for(int i = 0; i < number_of_aliases; i++){
 		LoW[i]=load_file(aliases[2*i+1],&number_of_words,aliases[2*i]);	
