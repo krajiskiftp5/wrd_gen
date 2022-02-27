@@ -34,11 +34,10 @@ int main(int argc, char *argv[]){
 int loop_wordlist(int wordlist_id, char *base, char *cmd){
 	if(wordlist_id == -1)
 		return -1;
-	int len = lenght_of_wordlists[wordlist_id];
+	int len = lenght_of_wordlists[wordlist_id] - 1;
 	if(strlen(cmd) < 3){
-		char **wl = list_of_wordlists[wordlist_id];	
+		char **wl = list_of_wordlists[wordlist_id]+1;	
 		int residue = len % bs;
-		len = (len / bs) * bs;
 			
 		for(int i = 0; i < len/bs;i++){
 			char *new, *new_base;
@@ -47,7 +46,7 @@ int loop_wordlist(int wordlist_id, char *base, char *cmd){
             new_base = (char *)malloc(bl * sizeof(char));
 			strcpy(new_base,"");
 
-			for(int j = 1;j < bs + 1;j++){
+			for(int j = 0;j < bs;j++){
 				nb = strlen(new_base) + 1;
 				nl = strlen(wl[bs*i+j]) + 1;
 				char *nnb = (char *)realloc(new_base,(nb + bl + nl)*sizeof(char));
@@ -68,8 +67,8 @@ int loop_wordlist(int wordlist_id, char *base, char *cmd){
 			free(new_base);
 		}
 		
-		residue += len; 
-		for(int i = len; i < residue; i++){
+		residue += (len / bs) * bs; 
+		for(int i = (len / bs) * bs; i < residue; i++){
 			int lenlen = strlen(base)+strlen(wl[i])+1;
 			char *final = (char *)malloc(lenlen * sizeof(char));			
 			strcpy(final, "");	
@@ -81,7 +80,7 @@ int loop_wordlist(int wordlist_id, char *base, char *cmd){
 	
 		return 0;
 	}
-	for(int i = 1; i < len;	i++){
+	for(int i = 1; i <= len;	i++){
 		char *new_base, *wl = list_of_wordlists[wordlist_id][i];
 		int new_len = strlen(wl), base_len = strlen(base);
 
