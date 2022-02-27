@@ -115,7 +115,8 @@ int loop(char *base, char *cmd){
 	commas[++c] = e;
 	
     for(int i = 0; i < c; i++){
-		wordlist_id = find_wordlist_id(crop_string(cmd,commas[i]+1,commas[i+1]));	      loop_wordlist(wordlist_id, base, crop_string(cmd,e+1,strlen(cmd)));
+		wordlist_id = find_wordlist_id(crop_string(cmd,commas[i]+1,commas[i+1]));
+        loop_wordlist(wordlist_id, base, crop_string(cmd,e+1,strlen(cmd)));
 	}	
 
 	return 0;
@@ -196,7 +197,8 @@ char ***load_all_wordlists(int *len, int *low){
 	aliases = load_file("alias.txt", &number_of_aliases,"als") + 1;
 	number_of_aliases = (number_of_aliases - 1) / 2;
 
-	list_of_wordlists = (char ***)malloc(number_of_aliases * sizeof(char**));		  lenght_of_wordlists = (int*)malloc(number_of_aliases * sizeof(int));
+	list_of_wordlists = (char ***)malloc(number_of_aliases * sizeof(char**));
+    lenght_of_wordlists = (int*)malloc(number_of_aliases * sizeof(int));
 
 	for(int i = 0; i < number_of_aliases; i++){
 		LoW[i]=load_file(aliases[2*i+1],&number_of_words,aliases[2*i]);	
