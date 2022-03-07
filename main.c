@@ -1,102 +1,91 @@
-//GPL v3
-
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<ctype.h>
 
-#define list_of_wordlists LoW
+#define list_of_wls LoW
+#define crop_string cstr
 
-int bs;
-int number_of_wordlists = 0;
-int  *lenght_of_wordlists;
-char ***list_of_wordlists;
+int number_of_wls = 0;
+int  *lenght_of_wls;
+char ***list_of_wls;
 
 int loop(char *base, char *cmd);
-int find_wordlist_id(char *alias);
-int loop_wordlist(int wordlist_id, char *base, char *cmd);
-int get_file_length(char *file_name);
+int find_wl_id(char *alias);
+int loop_wl(int wl_id, char *base, char *cmd, char *mod);
 char **load_file(char *file_name, int *len, char *alias);
-char ***load_all_wordlists(int *len, int *low);
-char *crop_string(char *in, int b, int e);
-void print_lines(char **lines, int len);
+char ***load_all_wls(int *len, int *low);
+char *cstr(char *in, int b, int e);
+int join(char *base, char *new, char *cmd, char *mod);
+int decide(char *base, char *to_mod, char *cmd);
+void all_caps(char *string);
 
 int main(int argc, char *argv[]){
-	LoW = load_all_wordlists(&number_of_wordlists,lenght_of_wordlists);	
-	bs = atoi(argv[1]);
+	FILE *save = fopen("command_history.txt", "a");
+	LoW = load_all_wls(&number_of_wls,lenght_of_wls);	
 
-	for(int i = 2; i < argc; i++){
+	for(int i = 1; i < argc; i++){
+		fprintf(save, "%s\n", argv[i]);
 		loop("",argv[i]);	
 	}
+	fclose(save);
 	return 0;
 }
 
-int loop_wordlist(int wordlist_id, char *base, char *cmd){
-	if(wordlist_id == -1)
-		return -1;
-	int len = lenght_of_wordlists[wordlist_id] - 1;
-	if(strlen(cmd) < 3){
-		char **wl = list_of_wordlists[wordlist_id]+1;	
-		int residue = len % bs;
-			
-		for(int i = 0; i < len/bs;i++){
-			char *new, *new_base;
-			int bl = strlen(base) + 1, nl, nb, length = 0;
-			
-            		new_base = (char *)malloc(bl * sizeof(char));
-			strcpy(new_base,"");
-
-			for(int j = 0;j < bs;j++){
-				nb = strlen(new_base) + 1;
-				nl = strlen(wl[bs*i+j]) + 1;
-				char *nnb = (char *)realloc(new_base,(nb + bl + nl)*sizeof(char));
-				
-                		if(!nnb){
-					fprintf(stderr,"Realloc failed\n");
-					exit(0);
-				}
-					
-				new_base = nnb;
-				strncat(new_base,base,bl);
-				strncat(new_base,wl[bs*i+j],nl);
-				strcat(new_base,"\n");
-				length += 1 + bl + nl;
-			}
-
-			printf("%s",new_base);
-			free(new_base);
-		}
-		
-		residue += (len / bs) * bs; 
-		for(int i = (len / bs) * bs; i < residue; i++){
-			int lenlen = strlen(base)+strlen(wl[i])+1;
-			char *final = (char *)malloc(lenlen * sizeof(char));			
-			strcpy(final, "");	
-			strncat(final, base, strlen(base));
-			strncat(final, wl[i], strlen(wl[i]));
-			printf("%s\n", final);
-			free(final);
-		}	
-	
-		return 0;
+void rot_13(char *string){
+	for(int i = 0; i < strlen(string); i++){
+		string[i] += 13;
+		if(isalpha(string[i])==0)string[i]-=26;
 	}
-	for(int i = 1; i <= len; i++){
-		char *new_base, *wl = list_of_wordlists[wordlist_id][i];
-		int new_len = strlen(wl), base_len = strlen(base);
+}
+	
+void all_caps(char *string){
+	for(int i = 0; i < strlen(string); i++)	
+		if(isalpha(string[i])) string[i] -= 32;
+}
 
-		new_base = (char *)malloc((new_len+base_len+1)*sizeof(char));
-		strcpy(new_base,"");
-		strncat(new_base,base,base_len);
-		strncat(new_base,wl, new_len);
-		
-		loop(new_base, cmd);
-		free(new_base);	
+int join(char *base, char *new, char *cmd, char *mod){
+	int s = strlen(base) + strlen(new) + 1;
+	char *out = (char*)malloc(s * sizeof(char));
+	char *to_mod = (char *)malloc((strlen(new)+1)*sizeof(char));
+	strcpy(to_mod, new);
+	
+	decide(base, to_mod, cmd);	
+	if(strchr(mod,'c')!=NULL){
+		to_mod[0] -= 32;
+		decide(base, to_mod, cmd);
+	}
+	if(strchr(mod,'u')!=NULL){
+		all_caps(to_mod);
+		decide(base, to_mod, cmd);
+	}
+	if(strchr(mod,'r')!=NULL){
+		rot_13(to_mod);
+		decide(base, to_mod, cmd);
+	}
+}
+
+int decide(char *base, char *to_mod, char *cmd){
+	int s = strlen(base) + strlen(to_mod) + 1;
+	char *out = (char*)malloc(s * sizeof(char));
+	sprintf(out, "%s%s", base, to_mod);
+	if(strlen(cmd) < 2) printf("%s\n", out);
+	else loop(out,cmd);
+}	
+
+int loop_wl(int wl_id, char *base, char *cmd, char *mod){
+	int len = lenght_of_wls[wl_id] - 1;
+	for(int i = 1; i <= len; i++){
+		char *new_base, *wl = list_of_wls[wl_id][i];
+		int new_len = strlen(wl), base_len = strlen(base);
+		join(base, wl, cmd, mod);
 	}
 	return 0;
 }
 
 int loop(char *base, char *cmd){
 	int s = -1, e = -1, c = 0;
-	int wordlist_id, commas[10] = {0};
+	int wl_id, commas[10] = {0};
 
 	for(int i = 0; i < strlen(cmd); i++){
 		if(cmd[i] == '[' && s == -1) s = i + 1;
@@ -108,31 +97,34 @@ int loop(char *base, char *cmd){
         	exit(1);
     	}
 
-	for(int i = s; i <= e; i++)
-		if(cmd[i] == ',')
-			commas[++c] = i;
+	for(int i = s; i <= e; i++)if(cmd[i] == ',')commas[++c] = i;
 	commas[++c] = e;
-	
-    	for(int i = 0; i < c; i++){
-		wordlist_id = find_wordlist_id(crop_string(cmd,commas[i]+1,commas[i+1]));
-        	loop_wordlist(wordlist_id, base, crop_string(cmd,e+1,strlen(cmd)));
-	}	
 
+	char *cm = cmd;	
+    	for(int i = 0; i < c; i++){
+		char *mod = strchr(cm+1,':');
+		if(mod == NULL) s = commas[i+1];
+		else{
+			s = strlen(cmd)-strlen(mod);
+			if(s > commas[i+1]) s = commas[i+1]; 
+		}
+		cm = mod + 1;
+		wl_id = find_wl_id(cstr(cmd,commas[i]+1,s));
+        	if(wl_id == -1)	return -1;
+		loop_wl(wl_id,base,cstr(cmd,e+1,strlen(cmd)),cstr(cmd,s+1,commas[i+1]));
+	}
 	return 0;
 }
 
-int find_wordlist_id(char *alias){
-	for(int i = 0; i < number_of_wordlists; i++){
-		if(strcmp(alias, list_of_wordlists[i][0]) == 0)
-			return i;
-	}
+int find_wl_id(char *alias){
+	for(int i = 0; i < number_of_wls; i++)
+		if(strcmp(alias, list_of_wls[i][0]) == 0) return i;
+	fprintf(stderr, "Alias: %s not found. \n", alias);
 	return -1;
 }
 
 char **load_file(char *file_name, int *len, char *alias){
-	int cl = 100; //chunk lenght
-	int noc = 1; //number of chunks
-
+	int i = 1, cl = 100; /*chunk lenght*/ int noc = 1; /*number of chunks*/
 	FILE *file = fopen(file_name, "r");
 	
 	if(!file){
@@ -140,9 +132,7 @@ char **load_file(char *file_name, int *len, char *alias){
         	exit(1);
     	}
 	
-	char **lines = (char **)malloc(cl * sizeof(char *));
-	char buf[50];
-	int i = 1;
+	char **lines = (char **)malloc(cl * sizeof(char *)); char buf[50];
 	lines[0] = alias;
 
 	while(fgets(buf, 50, file)){
@@ -155,11 +145,7 @@ char **load_file(char *file_name, int *len, char *alias){
 		lines[i++] = str;
 		
 		if(i == cl * noc){
-			char **nl = (char **)realloc(lines, (++noc) * cl * sizeof(char *));
-			if(!nl){
-                		fprintf(stderr, "Realloc failed");
-                		exit(1);
-            		}  
+			char **nl=(char**)realloc(lines,(++noc)*cl*sizeof(char*));
 			lines = nl;
 		}
 	}
@@ -167,46 +153,29 @@ char **load_file(char *file_name, int *len, char *alias){
 	return lines;
 }
 
-void print_lines(char **lines, int len){
-	for(int i = 0;i < len; i++){
-		printf("%s\n", lines[i]);
-	}
-}
-
-char *crop_string(char *in, int b, int e){
+char *cstr(char *in, int b, int e){
 	char *new = (char *)malloc((strlen(in) + 1) * sizeof(char));
 	strcpy(new,"");	strncat(new, in, e); return new + b;	
 }
 
-int get_file_length(char *file_name){
-	FILE *wordlist_file = fopen(file_name, "r");
-	int count_of_words = 0;
-
-	char ch;
-	while((ch=fgetc(wordlist_file))!=EOF)if(ch=='\n')count_of_words++;
-
-	fclose(wordlist_file);
-	return count_of_words;
-}
-
-char ***load_all_wordlists(int *len, int *low){
+char ***load_all_wls(int *len, int *low){
 	int number_of_aliases, number_of_words;
-	char ***list_of_wordlists, **aliases;
+	char ***list_of_wls, **aliases;
 
 	aliases = load_file("alias.txt", &number_of_aliases,"als") + 1;
 	number_of_aliases = (number_of_aliases - 1) / 2;
 
-	list_of_wordlists = (char ***)malloc(number_of_aliases * sizeof(char**));
-    	lenght_of_wordlists = (int*)malloc(number_of_aliases * sizeof(int));
+	list_of_wls = (char ***)malloc(number_of_aliases * sizeof(char**));
+    	lenght_of_wls = (int*)malloc(number_of_aliases * sizeof(int));
 
 	for(int i = 0; i < number_of_aliases; i++){
 		LoW[i]=load_file(aliases[2*i+1],&number_of_words,aliases[2*i]);	
-		lenght_of_wordlists[i] = number_of_words;
+		lenght_of_wls[i] = number_of_words;
 	}
 	
-	low = lenght_of_wordlists;	
+	low = lenght_of_wls;	
 	*len = number_of_aliases;
-	return list_of_wordlists;
+	return list_of_wls;
 }
 
 
